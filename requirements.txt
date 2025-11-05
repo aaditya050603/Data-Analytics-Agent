@@ -1,7 +1,7 @@
-langchain
 langchain-core
-langchain-community
-langchain-openai
+langchain==0.3.27
+langchain-openai==0.3.35
+langchain-community==0.3.27
 langchain-experimental
 langgraph
 pandas
