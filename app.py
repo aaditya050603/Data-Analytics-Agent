@@ -4,31 +4,31 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain.agents import initialize_agent, AgentType
+from langchain_community.tools.python.toolkit import PythonAstREPLToolKit
 
 # ============================================================
-# 🧩 Safe fallback for create_pandas_dataframe_agent
+# 🧩 Fallback-safe version of create_pandas_dataframe_agent
 # ============================================================
-try:
-    # Try official helper (works on langchain-community <=0.3.6)
-    from langchain_community.agent_toolkits import create_pandas_dataframe_agent
-except Exception:
-    from langchain.agents import AgentType, initialize_agent
-    from langchain_community.tools.python.tool import PythonAstREPLTool
+def create_pandas_dataframe_agent(llm, df, verbose=False, allow_dangerous_code=False, prefix=""):
+    """
+    Custom reimplementation of create_pandas_dataframe_agent.
+    Works on all LangChain 0.3+ versions.
+    """
+    import pandas as pd
 
-    def create_pandas_dataframe_agent(
-        llm, df, verbose=False, allow_dangerous_code=False, prefix=""
-    ):
-        """Minimal fallback implementation of Pandas DataFrame Agent."""
-        import pandas as pd
-        namespace = {"df": df, "pd": pd}
-        tool = PythonAstREPLTool(locals=namespace)
-        return initialize_agent(
-            [tool],
-            llm,
-            agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=verbose,
-            prefix=prefix,
-        )
+    toolkit = PythonAstREPLToolKit()
+    toolkit.locals = {"df": df, "pd": pd}
+
+    agent = initialize_agent(
+        tools=toolkit.get_tools(),
+        llm=llm,
+        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        verbose=verbose,
+        prefix=prefix,
+    )
+    return agent
+
 
 # ============================================================
 # ⚙️ Environment setup
@@ -100,16 +100,12 @@ if uploaded_file is not None:
             try:
                 response = agent.invoke(query, return_intermediate_steps=True)
 
-                # -----------------------------
-                # 🧠 Display raw model output
-                # -----------------------------
+                # 🧠 Display model output
                 if "output" in response:
                     st.write("### 🧠 AI Response")
                     st.write(response["output"])
 
-                # -----------------------------
-                # 📊 Extract numeric results
-                # -----------------------------
+                # 📊 Parse and show numeric results
                 matches = re.findall(
                     r"([\d\.e\+\-]+)\s+for\s+([\w\s]+)", response.get("output", "")
                 )
@@ -127,9 +123,7 @@ if uploaded_file is not None:
                     st.dataframe(df_result)
                     st.bar_chart(df_result.set_index("Category"))
 
-                # -----------------------------
-                # 📈 Show intermediate DataFrames
-                # -----------------------------
+                # 📈 Show DataFrame outputs from intermediate steps
                 for step in response.get("intermediate_steps", []):
                     observation = step[1]
                     if isinstance(observation, pd.DataFrame):
