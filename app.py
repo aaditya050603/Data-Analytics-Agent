@@ -4,7 +4,8 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_community.agent_toolkits import create_pandas_dataframe_agent
+from langchain_community.agent_toolkits.pandas.base import create_pandas_dataframe_agent
+
 
 
 
