@@ -1,0 +1,12 @@
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-experimental
+langgraph
+pandas
+matplotlib
+python-dotenv
+streamlit
+tabulate
+openpyxl
