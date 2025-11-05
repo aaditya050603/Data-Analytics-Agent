@@ -4,7 +4,8 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_experimental.agents import create_pandas_dataframe_agent
+from langchain_community.agent_toolkits import create_pandas_dataframe_agent
+
 
 # ============================================================
 # ✅ Environment setup
@@ -47,28 +48,26 @@ if uploaded_file is not None:
     # 🤖 Initialize LangChain Agent
     # ============================================================
 
-    llm =  ChatOpenAI(
-        temperature=0,
-        api_key=os.getenv("OPENAI_API_KEY"),
-        model="gpt-4-turbo"
+    llm = ChatOpenAI(
+    temperature=0,
+    api_key=os.getenv("OPENAI_API_KEY"),
+    model="gpt-4-turbo"
     )
 
-   # ✅ Define a custom prefix for the system prompt
     CUSTOM_INSTRUCTIONS = """
-You are an expert data analyst.
-When performing analysis or aggregation (like totals, averages, or groupings), 
-always return results in tabular format (columns and rows) for better readability.
-If applicable, also summarize key insights in plain English.
-"""
+    You are an expert data analyst.
+    When performing analysis or aggregation (like totals, averages, or groupings),
+    always return results in tabular format (columns and rows) for better readability.
+    If applicable, also summarize key insights in plain English.
+    """
 
     agent = create_pandas_dataframe_agent(
-    llm,
-    df,
-    verbose=True,
-    allow_dangerous_code=True,
-    prefix=CUSTOM_INSTRUCTIONS  # ✅ official replacement
+        llm,
+        df,
+        verbose=True,
+        allow_dangerous_code=True,
+        prefix=CUSTOM_INSTRUCTIONS
     )
-
 
     # ============================================================
     # 💬 Query Input
